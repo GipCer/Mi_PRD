@@ -52,10 +52,12 @@
 const limites = { A1: 3, A2: 4, A3: 4, A4: 2, A5: 2, A6: 3, A7: 3 };
 
 if (!localStorage.getItem("notas")) {
-    localStorage.setItem("notas", JSON.stringify({ A1: [], A2: [], A3: [], A4: [], A5: [], A6: [], A7: [] }));
+    localStorage.setItem("notas", JSON.stringify({
+        A1: [], A2: [], A3: [], A4: [], A5: [], A6: [], A7: []
+    }));
 }
-let notas = JSON.parse(localStorage.getItem("notas"));
 
+let notas = JSON.parse(localStorage.getItem("notas"));
 function guardarLS() { localStorage.setItem("notas", JSON.stringify(notas)); }
 
 function actualizarVista() {
@@ -73,9 +75,11 @@ function actualizarVista() {
 function agregarNota() {
     const area = document.getElementById("areaSelect").value;
     const nota = document.getElementById("notaInput").value.toUpperCase().trim();
+
     if (!area) return alert("Selecciona un área.");
     if (!["AD","A","B","C"].includes(nota)) return alert("La nota debe ser AD, A, B o C");
     if (notas[area].length >= limites[area]) return alert("Esa área ya tiene todas sus notas completas.");
+
     notas[area].push(nota);
     guardarLS();
     document.getElementById("notaInput").value = "";
@@ -85,6 +89,7 @@ function agregarNota() {
 function borrarArea() {
     const area = document.getElementById("areaSelect").value;
     if (!area) return alert("Selecciona un área para borrar.");
+
     notas[area] = [];
     guardarLS();
     actualizarVista();
@@ -92,6 +97,7 @@ function borrarArea() {
 
 function borrarTodo() {
     if (!confirm("¿Seguro que deseas borrar TODO?")) return;
+
     for (const area in notas) notas[area] = [];
     guardarLS();
     actualizarVista();
@@ -109,11 +115,14 @@ function evaluarArea(notasArea) {
 
 function evaluarEstudiante() {
     let resultados = [];
+
     for (const area in notas) {
         if (notas[area].length === 0) resultados.push(`${area}: ❌ No tiene notas`);
         else resultados.push(`${area}: ${evaluarArea(notas[area])}`);
     }
-    document.getElementById("resultadoGeneral").innerHTML = `<b>Resultado General:</b><br>` + resultados.join("<br>");
+
+    document.getElementById("resultadoGeneral").innerHTML =
+        `<b>Resultado General:</b><br>` + resultados.join("<br>");
 }
 
 actualizarVista();
