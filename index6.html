@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sistema de Notas – A1 a A7</title>
+
+<style>
+    body { 
+        font-family: Arial, sans-serif; 
+        margin: 0; 
+        background: #f4f4f4; 
+        padding: 15px; 
+    }
+    h1 { 
+        text-align: center; 
+        font-size: 1.5em;
+        margin-bottom: 15px;
+    }
+    .container { 
+        background: white; 
+        padding: 15px; 
+        border-radius: 12px; 
+        box-shadow: 0 0 8px rgba(0,0,0,0.15); 
+        max-width: 550px; 
+        margin: auto; 
+        box-sizing: border-box;
+    }
+    label { 
+        display: block; 
+        margin-top: 10px; 
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+    select, input { 
+        width: 100%; 
+        padding: 10px; 
+        margin-top: 5px; 
+        border-radius: 8px; 
+        border: 1px solid #999; 
+        font-size: 14px; 
+        box-sizing: border-box;
+    }
+    .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 15px;
+    }
+    button { 
+        padding: 10px; 
+        border-radius: 8px; 
+        border: none; 
+        font-size: 14px; 
+        cursor: pointer;
+        transition: background-color 0.3s;
+        box-sizing: border-box;
+    }
+    .btn-agregar { 
+        background: #007bff; 
+        color: white; 
+    }
+    .btn-agregar:hover { 
+        background: #0056b3; 
+    }
+    .btn-borrar-area { 
+        background: #b30000; 
+        color: white; 
+    }
+    .btn-borrar-area:hover { 
+        background: #8b0000; 
+    }
+    .btn-borrar-todo { 
+        background: #ff6600; 
+        color: white; 
+    }
+    .btn-borrar-todo:hover { 
+        background: #cc5200; 
+    }
+    .btn-evaluar { 
+        background: #28a745; 
+        color: white; 
+    }
+    .btn-evaluar:hover { 
+        background: #1e7e34; 
+    }
+    hr {
+        margin: 20px 0;
+        border: none;
+        border-top: 1px solid #ddd;
+    }
+    .area-box { 
+        background: #e9e9e9; 
+        padding: 10px; 
+        border-radius: 8px; 
+        margin-top: 10px; 
+        font-size: 0.9em;
+        box-sizing: border-box;
+    }
+    .completo { 
+        border-left: 5px solid #28a745; 
+    }
+    .incompleto { 
+        border-left: 5px solid #ffc107; 
+    }
+    .resultado { 
+        padding: 12px; 
+        border-radius: 8px; 
+        margin-top: 15px; 
+        font-weight: bold; 
+        text-align: center; 
+        font-size: 0.9em;
+        box-sizing: border-box;
+    }
+    .promocion { 
+        background: #d4edda; 
+        color: #155724; 
+        border: 2px solid #c3e6cb; 
+    }
+    .permanencia { 
+        background: #f8d7da; 
+        color: #721c24; 
+        border: 2px solid #f5c6cb; 
+    }
+    .recuperacion { 
+        background: #fff3cd; 
+        color: #856404; 
+        border: 2px solid #ffeaa7; 
+    }
+    .advertencia { 
+        background: #fff3cd; 
+        color: #856404; 
+        border: 2px solid #ffeaa7; 
+        margin-bottom: 15px;
+    }
+    .error { 
+        background: #f8d7da; 
+        color: #721c24; 
+        border: 2px solid #f5c6cb; 
+    }
+    small {
+        font-size: 0.8em;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>Sistema de Notas A1 – A7</h1>
+<div class="container">
+    <label for="areaSelect">Selecciona un área:</label>
+    <select id="areaSelect">
+        <option value="">-- Selecciona --</option>
+        <option value="A1">A1 (3 notas)</option>
+        <option value="A2">A2 (4 notas)</option>
+        <option value="A3">A3 (4 notas)</option>
+        <option value="A4">A4 (2 notas)</option>
+        <option value="A5">A5 (2 notas)</option>
+        <option value="A6">A6 (3 notas)</option>
+        <option value="A7">A7 (3 notas)</option>
+    </select>
+
+    <label for="notaInput">Agregar nota (AD, A, B, C):</label>
+    <input id="notaInput" placeholder="Ejemplo: A" maxlength="2">
+
+    <div class="button-group">
+        <button class="btn-agregar" onclick="agregarNota()">Agregar Nota</button>
+        <button class="btn-borrar-area" onclick="borrarArea()">Borrar notas del área</button>
+        <button class="btn-borrar-todo" onclick="borrarTodo()">Borrar TODO</button>
+    </div>
+
+    <hr>
+    
+    <button class="btn-evaluar" onclick="evaluarEstudiante()">Evaluar Estudiante Completo</button>
+
+    <div id="resultadoGeneral"></div>
+
+    <h3>Notas Registradas</h3>
+    <div id="listaAreas"></div>
+</div>
+
+<script>
+const limites = { A1: 3, A2: 4, A3: 4, A4: 2, A5: 2, A6: 3, A7: 3 };
+
+if (!localStorage.getItem("notas")) {
+    localStorage.setItem("notas", JSON.stringify({
+        A1: [], A2: [], A3: [], A4: [], A5: [], A6: [], A7: []
+    }));
+}
+
+let notas = JSON.parse(localStorage.getItem("notas"));
+function guardarLS() { localStorage.setItem("notas", JSON.stringify(notas)); }
+
+function actualizarVista() {
+    let html = "";
+    for (const area in notas) {
+        const estaCompleto = notas[area].length === limites[area];
+        const clase = estaCompleto ? "completo" : "incompleto";
+        
+        html += `
+            <div class="area-box ${clase}">
+                <b>${area}</b> (${notas[area].length}/${limites[area]})<br>
+                Notas: ${notas[area].join(", ") || "Sin notas"}
+                ${!estaCompleto ? `<br><small style="color: #856404;">⚠️ Faltan ${limites[area] - notas[area].length} notas</small>` : ""}
+            </div>`;
+    }
+    document.getElementById("listaAreas").innerHTML = html;
+}
+
+function agregarNota() {
+    const area = document.getElementById("areaSelect").value;
+    const nota = document.getElementById("notaInput").value.toUpperCase().trim();
+
+    if (!area) return alert("Selecciona un área.");
+    if (!["AD","A","B","C"].includes(nota)) return alert("La nota debe ser AD, A, B o C");
+    if (notas[area].length >= limites[area]) return alert("Esa área ya tiene todas sus notas completas.");
+
+    notas[area].push(nota);
+    guardarLS();
+    document.getElementById("notaInput").value = "";
+    actualizarVista();
+}
+
+function borrarArea() {
+    const area = document.getElementById("areaSelect").value;
+    if (!area) return alert("Selecciona un área para borrar.");
+
+    notas[area] = [];
+    guardarLS();
+    actualizarVista();
+}
+
+function borrarTodo() {
+    if (!confirm("¿Seguro que deseas borrar TODO?")) return;
+
+    for (const area in notas) notas[area] = [];
+    guardarLS();
+    actualizarVista();
+}
+
+function evaluarArea(notasArea) {
+    const total = notasArea.length;
+    const buenas = notasArea.filter(n => n === "A" || n === "AD").length;
+    const malas = notasArea.filter(n => n === "C").length;
+    const regulares = notasArea.filter(n => n === "B").length;
+
+    // PROMOCIÓN: A/AD en ≥50% Y B en las demás
+    if (buenas >= total / 2 && (buenas + regulares === total)) {
+        return "PROMOCIÓN";
+    }
+    
+    // PERMANENCIA CORREGIDA: C en ≥50% (mitad o más) Y B en las demás
+    if (malas >= total / 2 && (malas + regulares === total)) {
+        return "PERMANENCIA";
+    }
+    
+    return "RECUPERACIÓN";
+}
+
+function evaluarEstudiante() {
+    const resultadoDiv = document.getElementById("resultadoGeneral");
+    resultadoDiv.innerHTML = "";
+
+    // Identificar áreas completas e incompletas
+    const areasCompletas = [];
+    const areasIncompletas = [];
+    
+    for (const area in notas) {
+        if (notas[area].length === limites[area]) {
+            areasCompletas.push(area);
+        } else if (notas[area].length > 0) {
+            areasIncompletas.push(`${area} (${notas[area].length}/${limites[area]} notas)`);
+        }
+    }
+
+    // Mostrar advertencia si hay áreas incompletas
+    if (areasIncompletas.length > 0) {
+        resultadoDiv.innerHTML += `
+            <div class="resultado advertencia">
+                ⚠️ <strong>Evaluación Parcial - Áreas Incompletas:</strong><br>
+                ${areasIncompletas.join(", ")}<br>
+                <small>Se evaluarán solo las áreas completas</small>
+            </div>
+        `;
+    }
+
+    // Si no hay áreas completas, mostrar error
+    if (areasCompletas.length === 0) {
+        resultadoDiv.innerHTML += `
+            <div class="resultado error">
+                ❌ <strong>No se puede evaluar</strong><br>
+                No hay áreas con todas las notas completas.
+            </div>
+        `;
+        return;
+    }
+
+    // Evaluar solo las áreas completas
+    let resultados = [];
+    let areasPromocion = 0;
+    let areasPermanencia = 0;
+    let areasRecuperacion = 0;
+
+    for (const area of areasCompletas) {
+        const resultadoArea = evaluarArea(notas[area]);
+        resultados.push(`${area}: ${resultadoArea}`);
+        
+        if (resultadoArea === "PROMOCIÓN") areasPromocion++;
+        else if (resultadoArea === "PERMANENCIA") areasPermanencia++;
+        else areasRecuperacion++;
+    }
+
+    // Determinar resultado final según las normas (solo con áreas completas)
+    let resultadoFinal = "";
+    let claseResultado = "";
+
+    if (areasPromocion >= 4) {
+        resultadoFinal = "PROMOCIÓN";
+        claseResultado = "promocion";
+    } else if (areasPermanencia >= 4) {
+        resultadoFinal = "PERMANENCIA";
+        claseResultado = "permanencia";
+    } else {
+        resultadoFinal = "RECUPERACIÓN";
+        claseResultado = "recuperacion";
+    }
+
+    resultadoDiv.innerHTML += `
+        <div class="resultado ${claseResultado}">
+            <strong>RESULTADO FINAL: ${resultadoFinal}</strong><br><br>
+            <strong>Áreas evaluadas (${areasCompletas.length}/7):</strong><br>
+            ${resultados.join("<br>")}<br><br>
+            <strong>Resumen de áreas completas:</strong><br>
+            • PROMOCIÓN: ${areasPromocion}<br>
+            • PERMANENCIA: ${areasPermanencia}<br>
+            • RECUPERACIÓN: ${areasRecuperacion}<br><br>
+            <small>Basado en ${areasCompletas.length} de 7 áreas completas</small>
+        </div>
+    `;
+}
+
+actualizarVista();
+</script>
+
+</body>
+</html>
